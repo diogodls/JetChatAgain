@@ -3,7 +3,7 @@
     <div class="menu">
       <h2 class="title">JetChat (again)</h2>
 
-      <p class="error">
+      <p v-if="errors" class="error">
         {{ errors }}
       </p>
 
@@ -26,6 +26,7 @@ export default {
       errors: null,
     }
   },
+
   methods: {
     login() {
       socket.emit('userLogin', this.nickname);
@@ -34,11 +35,13 @@ export default {
       socket.on('rejectedNickname', msg => {
         this.errors = msg;
         console.log(this.errors);
-      })
+      });
 
-      if (!this.errors){
-        this.$router.push({name: 'HomeChat'});
+      if(this.errors) {
+        this.$router.push({name: 'home'});
       }
+
+      this.$router.push({name: 'HomeChat'});
     }
   }
 }

@@ -1,11 +1,12 @@
 <template>
   <div class="chat">
-    <chat-sidebar :userList="userList" class="sidebar" />
+    <chat-sidebar :userList="userList" :user-logged="user" class="sidebar" />
     
     <section class="chatSection">
       <ul class="messagesList">
         <li v-for="message in messages" :key="message.id">
-          <span class="messageSpan" :style="{justifyContent: [message.user == user ? 'flex-end' : 'flex-start']}">{{ message.user }} : {{ message.message }}</span>
+          <span class="messageSpan entryMessage" v-if="message.user === 'system'"> {{message.message}}</span>
+          <span class="messageSpan" v-if="message.user !== 'system'">{{ message.user }} : {{ message.message }}</span>
         </li>
       </ul>
       <textarea class="messageInput" name="" v-model="message" @keyup.enter="createMessage"/>
@@ -25,19 +26,22 @@ export default {
   name: 'HomeChat',
   data() {
     return {
-      userList: ['dioguin', 'junin AKA trovao'],
+      userList: [],
       messages: [],
-      message: ''
+      message: '',
     }
   },
 
   mounted() {
     socket.on('messageReceived', (msg) => {
-      this.messages = this.messages.concat(msg);
+      this.messages = msg;
     });
     socket.on('userList', (userList) => {
-      this.userList = this.userList.push(userList);
-    })
+      this.userList = userList;
+    });
+    socket.on('updatedUserList', (userList) => {
+      this.userList = userList;
+    });
   },
 
   computed:{
@@ -50,7 +54,7 @@ export default {
         id: Math.floor(Date.now() * Math.random()).toString(36),
         user: this.$store.state.user,
         message: this.message,
-      }
+      };
 
       this.messages = this.messages.concat(message);
       socket.emit('message', message);
@@ -79,6 +83,8 @@ export default {
 
 .chatSection {
   width: 100%;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .messagesList {
@@ -89,6 +95,10 @@ export default {
 .messageSpan {
   display: flex;
   padding: .5rem 1rem;
+}
+
+.entryMessage{
+  justify-content: center;
 }
 
 .messageInput {
